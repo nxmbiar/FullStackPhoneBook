@@ -27,13 +27,14 @@ let persons = [
   ]
 
 app.use(express.json())
+app.use(express.static('build'))
 morgan.token('body', function (req, res) { return JSON.stringify(req.body) })
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 app.use(cors())
 
-app.get('/', (req, res) => {
-    res.send('<h1>Hey there</h1>')
-})
+// app.get('/', (req, res) => {
+//     res.send('<h1>Hey there</h1>')
+// })
 
 app.get('/api/persons', (req, res) => {
     res.send(persons)
