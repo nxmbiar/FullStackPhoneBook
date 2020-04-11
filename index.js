@@ -12,7 +12,7 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :b
 
 const errorHandler = (error, req, res, next) => {
     if (error.name === 'ValidationError') {
-        return res.status(400).send({error: 'Content is missing'})
+        return res.status(400).send({ error: 'Content is missing' })
     }
     if (error.name === 'CastError' && error.kind === 'ObjectId') {
         return res.status(400).send({ error: 'malformatted id' })
@@ -38,7 +38,7 @@ app.get('/api/persons/:id', (req, res, next) => {
                 res.json(result.toJSON())
             }
             else{
-                console.log("Not found in DB")
+                console.log('Not found in DB')
                 res.status(404).end()
             }
         })
@@ -68,7 +68,7 @@ app.post('/api/persons', (req, res, next) => {
         .catch(error => {
             if(error.name === 'ValidationError'){
                 // console.log(error)
-                res.status(400).json({error: error.message})
+                res.status(400).json({ error: error.message })
             }
         })
 })
@@ -81,7 +81,7 @@ app.put('/api/persons/:id', (req, res, next) => {
     }
 
     Person
-        .findByIdAndUpdate(req.params.id, person, {new: true, runValidators: true, context: 'query'})
+        .findByIdAndUpdate(req.params.id, person, { new: true, runValidators: true, context: 'query' })
         .then(result => {
             if(result){
                 res.json(result.toJSON())
@@ -106,7 +106,7 @@ app.get('/api/info', (req, res) => {
 
 const unknownEndpoint = (req, res) => {
     res.status(404).send({ error: 'unknown endpoint' })
-  }
+}
 
 app.use(unknownEndpoint)
 const port = process.env.PORT

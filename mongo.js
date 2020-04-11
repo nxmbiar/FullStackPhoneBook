@@ -7,7 +7,7 @@ if(process.argv.length < 3){
 
 const password = process.argv[2]
 const url = `mongodb+srv://nambiar:${password}@cluster0-dhvjz.mongodb.net/phone-app?retryWrites=true&w=majority`
-mongoose.connect(url, {useNewUrlParser: true, useUnifiedTopology: true})
+mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
 
 console.log('Connected')
 const personSchema = new mongoose.Schema({
