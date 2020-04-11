@@ -2,27 +2,25 @@ require('dotenv').config()
 const express = require('express')
 const app = express()
 var morgan = require('morgan')
+morgan.token('body', function (req, res) { return JSON.stringify(req.body) })
 const cors = require('cors')
 const Person = require('./models/person')
 
-app.use(express.json())
-app.use(express.static('build'))
-morgan.token('body', function (req, res) { return JSON.stringify(req.body) })
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 app.use(cors())
+app.use(express.json())
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 const errorHandler = (error, req, res, next) => {
-    console.log(error.message)
+    if (error.name === 'ValidationError') {
+        return res.status(400).send({error: 'Content is missing'})
+    }
     if (error.name === 'CastError' && error.kind === 'ObjectId') {
-        return response.status(400).send({ error: 'malformatted id' })
-      } 
+        return res.status(400).send({ error: 'malformatted id' })
+    }
     next(error)
 }
 app.use(errorHandler)
-
-// app.get('/', (req, res) => {
-//     res.send('<h1>Hey there</h1>')
-// })
+app.use(express.static('build'))
 
 app.get('/api/persons', (req, res) => {
     Person
@@ -44,7 +42,6 @@ app.get('/api/persons/:id', (req, res, next) => {
                 res.status(404).end()
             }
         })
-        .catch(error => next(error))
 })
 
 app.delete('/api/persons/:id', (req, res, next) => {
@@ -54,7 +51,7 @@ app.delete('/api/persons/:id', (req, res, next) => {
         .catch(error => next(error))
 })
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
     const body = req.body
     if(!body.name || !body.number){
         return res.status(400).json({
@@ -67,8 +64,12 @@ app.post('/api/persons', (req, res) => {
     })
     person
         .save()
-        .then(result => {
-            res.json(result.toJSON())
+        .then(result => res.json(result.toJSON()))
+        .catch(error => {
+            if(error.name === 'ValidationError'){
+                // console.log(error)
+                res.status(400).json({error: error.message})
+            }
         })
 })
 
@@ -80,7 +81,7 @@ app.put('/api/persons/:id', (req, res, next) => {
     }
 
     Person
-        .findByIdAndUpdate(req.params.id, person, {new: true})
+        .findByIdAndUpdate(req.params.id, person, {new: true, runValidators: true, context: 'query'})
         .then(result => {
             if(result){
                 res.json(result.toJSON())
