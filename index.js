@@ -1,30 +1,9 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 var morgan = require('morgan')
 const cors = require('cors')
-
-let persons = [
-    {
-      "name": "Arto Hellas",
-      "number": "98765",
-      "id": 1
-    },
-    {
-      "name": "Ada Lovelace",
-      "number": "39-44-5323523",
-      "id": 2
-    },
-    {
-      "name": "Dan Abramov",
-      "number": "12-43-234345",
-      "id": 3
-    },
-    {
-      "name": "Mary Poppendieck",
-      "number": "39-23-6423122",
-      "id": 4
-    }
-  ]
+const Person = require('./models/person')
 
 app.use(express.json())
 app.use(express.static('build'))
@@ -37,10 +16,19 @@ app.use(cors())
 // })
 
 app.get('/api/persons', (req, res) => {
-    res.send(persons)
+    Person
+        .find({})
+        .then(result => {
+            res.json(result.map(person => person.toJSON()))
+        })
 })
 
 app.get('/api/persons/:id', (req, res) => {
+    Person
+        .findById(req.params.id)
+        .then(result => {
+            res.json(result.toJSON())
+        })
     const id = parseInt(req.params.id)
     const person = persons.find(person => person.id === id)
 
@@ -66,21 +54,22 @@ app.post('/api/persons', (req, res) => {
         })
     }
 
-    const existing = persons.find(person => person.name === body.name)
+    // const existing = persons.find(person => person.name === body.name)
 
-    if(existing){
-        return res.status(400).json({
-            error: 'name must be unique'
+    // if(existing){
+    //     return res.status(400).json({
+    //         error: 'name must be unique'
+    //     })
+    // }
+    const person = new Person({
+        name: body.name,
+        number: body.number
+    })
+    person
+        .save()
+        .then(result => {
+            res.json(result.toJSON())
         })
-    }
-    const person = {
-        'name': body.name,
-        'number': body.number,
-        'id': Math.floor(Math.random()*1000)
-    }
-
-    persons = persons.concat(person)
-    res.json(person)
 })
 
 app.get('/api/info', (req, res) => {
@@ -96,7 +85,7 @@ const unknownEndpoint = (req, res) => {
   }
 
 app.use(unknownEndpoint)
-const port = process.env.PORT || 3001
+const port = process.env.PORT
 app.listen(port, () => {
     console.log(`Server running on port ${port}`)
 })
